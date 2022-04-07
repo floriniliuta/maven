@@ -1,44 +1,64 @@
 import com.aspose.pdf.*;
-import com.aspose.pdf.operators.*;
-
 public class app {
-    public static void main(String [] args) {
-        License license = new License();
-        try {
-            license.setLicense("C:/users/pero/desktop/aspose/Conholdate.Total.Product.Family.lic");
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static void main(String [] args){
+
+        for (int page =2 ; page<=2;page++) {
+            com.aspose.pdf.License license = new com.aspose.pdf.License();
+            try {
+                license.setLicense("Conholdate.Total.Product.Family.lic");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            //for(Page page : pdfDocument.getPages()) {
+            TableAbsorber absorber = new TableAbsorber();
+            absorber.setUseFlowEngine(true);
+            Document pdfDocument = new Document("RB Monthly Invoice_1220 .pdf");
+            absorber.visit(pdfDocument.getPages().get_Item(page));
+            System.out.println("PageNum: "+pdfDocument.getPages().get_Item(page).getNumber());
+            System.out.println("The list of tables : "+absorber.getTableList().stream().count());
+            for (int idTable = 0; idTable < absorber.getTableList().stream().count(); idTable++) {
+                AbsorbedTable table = absorber.getTableList().get(idTable);
+                // set index of a table from which you want to extract the data
+                // 0 -> Table index
+                if (idTable <= 1) {
+                    System.out.println("THe row list" + table.getRowList().stream().count());
+                    for (int idRow = 0; idRow < table.getRowList().stream().count(); idRow++) {
+                        TextFragmentCollection textFragmentCollection = null;
+                        AbsorbedRow row = table.getRowList().get(idRow);
+                        String txt = "";
+                        // set rows from which you want to extract data, in this case first two header
+                        // rows
+                        // 2 - start and end row condition/Header rows
+                        if (idRow >=0 ) {
+                            for (int idCell = 0; idCell < row.getCellList().stream().count(); idCell++) {
+                                //System.out.println("THe cell list" + row.getCellList().stream().count());
+                                AbsorbedCell cell = row.getCellList().get(idCell);
+
+                                textFragmentCollection = cell.getTextFragments();
+                                if (cell.getTextFragments().size() > 0) {
+                                    for (TextFragment fragment : textFragmentCollection) {
+
+                                        txt = txt.concat(fragment.getText());
+                                        txt = txt.concat(",");
+
+                                    }
+
+                                } else {
+                                    txt = txt.concat(" ");
+                                    txt = txt.concat(",");
+
+                                }
+
+                            }
+                            System.out.println("The segmant :" + txt);
+                            pdfDocument.save("out.pdf");
+                        }
+                    }
+                }
+            }
         }
-        var document = new Document("testExtraction (1).pdf");
-        var page = document.getPages().get_Item(1);
-        var rectangle = new Rectangle(72.024, 381.17000000953675, 181.5959996213913, 393.31399996757506);
-        var absorber = new TextFragmentAbsorber();
-        var searchValue = "Canada";
 
-        searchValue = java.util.regex.Pattern.quote(searchValue);
-        absorber.setPhrase(searchValue);
-        absorber.setTextSearchOptions(new TextSearchOptions(rectangle, true));
-        page.accept(absorber);
 
-        var textFragments = absorber.getTextFragments();
-        for (var textFragment : textFragments) {
-            drawRectangleOnPage(page, textFragment.getRectangle(), new SetRGBColorStroke(1, 0, 0), new SetLineWidth(1));
-            System.out.println(textFragment.getText());
 
-        }
-        document.save("22.3.pdf");
     }
-
-
-        private static void drawRectangleOnPage (Page page, Rectangle rectangle, SetRGBColorStroke
-        colorStroke, SetLineWidth width){
-            page.getContents().add(new GSave());
-            page.getContents().add(new ConcatenateMatrix(1, 0, 0, 1, 0, 0));
-            page.getContents().add(colorStroke);
-            page.getContents().add(width);
-            page.getContents().add(new Re(rectangle.getLLX(), rectangle.getLLY(), rectangle.getWidth(), rectangle.getHeight()));
-            page.getContents().add(new ClosePathStroke());
-            page.getContents().add(new GRestore());
-        }
-    }
-
+}
